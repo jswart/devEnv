@@ -1,0 +1,8 @@
+#!/usr/bin/env expect
+
+set HOME $::env(HOME)
+set timeout 3
+
+spawn $HOME/Downloads/google-cloud-sdk/install.sh
+expect "Do you want to help"
+send "n"

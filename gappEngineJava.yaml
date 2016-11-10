@@ -1,0 +1,105 @@
+---
+# To run: ansible-playbook gappEngineJava.yaml --ask-become-pass
+# TODO: Add GPG key checking where possible
+# TODO: Add some better way to find the latest version URLs of SW below
+- hosts: localhost
+  vars:
+    HOME: "{{ lookup('env', 'HOME') }}"
+    DOWN: "{{ HOME }}/Downloads"
+    GCLOUD: "{{ HOME }}/gcloud"
+    OPT_BIN: "/opt/bin"
+
+  tasks:
+
+  - name: Create {{ OPT_BIN }}...
+    file: path={{ OPT_BIN }} state=directory mode=0775
+
+  - name: Install git
+    apt: update_cache=yes name=git install_recommends=yes
+    become: true
+    become_user: root
+
+  - name: Install python
+    apt: update_cache=no name=python install_recommends=yes
+    become: true
+    become_user: root
+
+  - name: Install unzip
+    apt: update_cache=no name=unzip install_recommends=yes
+    become: true
+    become_user: root
+
+  - name: Install expect
+    apt: update_cache=no name=expect install_recommends=yes
+    become: true
+    become_user: root
+
+  - shell: type gcloud >/dev/null || echo false
+    register: gcloudExists
+    changed_when: False
+
+  # Create the gcloud Directory for Gcloud Repositories
+  - file: state=directory path={{ GCLOUD }} mode=0755
+
+  - block:
+    - name: Download Google App Engine
+      get_url: dest={{ DOWN }} url=https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-133.0.0-linux-x86_64.tar.gz
+
+    - name: Extract and Install Google App Engine
+      unarchive: src={{ DOWN }}/google-cloud-sdk-133.0.0-linux-x86_64.tar.gz dest={{ DOWN }}
+
+    # Install Google App Engine
+    - shell: "{{ HOME }}/ansible/installGappEngine.exp"
+      changed_when: False
+
+    # Restart the shell
+    - shell: exec bash
+      changed_when: False
+
+    # Initialize the SDK
+    - shell: "{{ DOWN }}/google-cloud-sdk/bin/gcloud init"
+      changed_when: False
+    when: gcloudExists == false
+
+  # Clone the Java Cloud Client Library
+  - stat: path={{ GCLOUD }}/google-cloud-java
+    register: st
+
+  - git: dest={{ GCLOUD }}/google-cloud-java repo=https://github.com/GoogleCloudPlatform/google-cloud-java.git
+    when: st.stat.exists is defined and not st.stat.exists
+
+  # Ensure we are using Java 1.8
+  - shell: java -version 2>&1 | grep '1\.8' -q || echo true
+    register: javaNotLatest
+    changed_when: False
+
+  - block:
+    - shell: sudo add-apt-repository ppa:webupd8team/java
+      changed_when: False
+
+    - name: Install Java 1.8
+      apt: update_cache=yes name=oracle-java8-installer
+    when: javaNotLatest == "true"
+
+  - stat: path={{ OPT_BIN }}/mvn
+    register: mvn
+
+  - block:
+    - name: Download Maven
+      get_url: dest={{ DOWN }} url=http://apache.mirror.rafal.ca/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.zip
+
+    - name: Extract Maven
+      unarchive: src={{ DOWN }}/apache-maven-3.3.9 dest=/opt
+
+    - name: Create Symlink for Maven
+    when: mvn.stat.exists is defined and not mvn.stat.exists
+
+  - shell: gcloud components install app-engine-java 2>/dev/null
+    ignore_errors: yes
+    changed_when: False
+
+  - stat: path={{ GCLOUD }}/getting-started-java
+    register: getStarted
+
+  - git: dest={{ GCLOUD }}/getting-started-java repo=https://github.com/GoogleCloudPlatform/getting-started-java
+    when: getStarted.stat.exists is defined and not getStarted.stat.exists

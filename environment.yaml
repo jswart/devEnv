@@ -1,0 +1,68 @@
+---
+# To run: ansible-playbook environment.yaml --ask-become-pass
+# TODO: Add GPG key checking where possible
+# TODO: Add some better way to find the latest version URLs of SW below
+- hosts: localhost
+  vars:
+    HOME:    "{{ lookup('env', 'HOME') }}"
+    DOWN:    "{{ HOME }}/Downloads"
+    ALIAS:   "{{ HOME }}/.bash_aliases"
+    OPT_BIN: "/opt/bin"
+
+  tasks:
+
+  - name: Create {{ OPT_BIN }}...
+    file: path={{ OPT_BIN }} state=directory mode=0775
+    become: yes
+    become_user: root
+
+  # I cannot depend on lineinfile to "do what I expect". Everytime I use a regex, it replaces the line.
+  # I just want it to replace the line if it's missing. This seems to do the job:
+  - lineinfile: "dest={{ HOME }}/.bashrc state=present insertafter=EOF line='#Add {{ OPT_BIN }} to PATH'"
+  - lineinfile: "dest={{ HOME }}/.bashrc state=present insertafter=EOF line='export PATH=$PATH:{{ OPT_BIN }}'"
+
+  # Setup Aliases
+  - name: Add alias srccmds
+    lineinfile: dest={{ HOME }}/.bash_aliases state=present insertafter=EOF create=True
+      line="alias srccmds='source ~/.bashrc'"
+      regexp="^alias srccmds='source ~/.bashrc'$"
+
+  - lineinfile: dest={{ HOME }}/.bash_aliases state=present insertafter=EOF create=True
+      line="alias editcmds='sublime ~/.bashrc ~/.bash_aliases'"
+      regexp="^alias editcmds='sublime ~/.bashrc ~/.bash_aliases'$"
+
+  - lineinfile: dest={{ HOME }}/.bash_aliases state=present insertafter=EOF create=True
+      line="alias h='history'"
+      regexp="^alias h='history'$"
+
+  # Setup Eclipse
+  - stat: path={{ OPT_BIN }}/eclipse
+    register: stEclipse
+
+  - block:
+    - name: Download eclipse
+      get_url: dest={{ DOWN }} url=http://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/neon/1a/eclipse-jee-neon-1a-linux-gtk-x86_64.tar.gz&mirror_id=1135
+
+    - name: Extract Eclipse
+      unarchive: src={{ DOWN }}/eclipse-jee-neon-1a-linux-gtk-x86_64.tar.gz dest=/opt
+      become: true
+      become_user: root
+
+    - name: Setup Eclipse Symlink
+      file: src=/opt/eclipse/eclipse dest={{ OPT_BIN }}/eclipse state=link
+      become: true
+      become_user: root
+
+    - name: Install Eclipse Plugin - Shell Script Editor
+      shell: "{{OPT_BIN}}/eclipse -nosplash -application org.eclipse.equinox.p2.director -repository http://download.eclipse.org/releases/neon/,http://download.eclipse.org/technology/dltk/updates/,https://sourceforge.net/projects/shelled/files/shelled/update/ -installIU net.sourceforge.shelled.feature.group"
+
+    - name: Install Eclipse Plugin - YAML Editor
+      shell: "{{OPT_BIN}}/eclipse -nosplash -application org.eclipse.equinox.p2.director -repository http://dadacoalition.org/yedit -installIU org.dadacoalition.yedit.feature.feature.group"
+
+    - name: Install Eclipse Plugin - Egit
+      shell: "{{OPT_BIN}}/eclipse -nosplash -application org.eclipse.equinox.p2.director -repository http://download.eclipse.org/releases/neon/ -installIU org.eclipse.egit.feature.group=4.4.1.201607150455-r"
+
+    - name: Install Eclipse Plugin - Mylyn for GitHub
+      shell: "{{OPT_BIN}}/eclipse -nosplash -application org.eclipse.equinox.p2.director -repository http://download.eclipse.org/releases/neon/ -installIU org.eclipse.egit.mylyn.feature.group=4.4.1.201607150455-r"
+
+    when: stEclipse.stat.exists is defined and not stEclipse.stat.exists
