@@ -8,6 +8,8 @@
     DOWN:    "{{ HOME }}/Downloads"
     ALIAS:   "{{ HOME }}/.bash_aliases"
     OPT_BIN: "/opt/bin"
+    SUBLIME: "sublime_text_3_build_3125_x64.tar.bz2"
+    ECLIPSE: "eclipse-jee-neon-1a-linux-gtk-x86_64.tar.gz"
 
   tasks:
 
@@ -39,6 +41,32 @@
     apt: update_cache=no name=vim install_recommends=yes
     become: true
     become_user: root 
+
+  # Setup sublime
+  - stat: path={{ OPT_BIN }}/sublime
+    register: stSublime
+
+  - block:
+    
+    # Check for redownload
+    - stat: path={{ DOWN }}/{{ SUBLIME }}
+      register: stDownSublime
+
+    - name: Download Sublime Text - Java EE
+      get_url: dest={{ DOWN }} url=http://download.sublimetext.com/{{ SUBLIME }}
+      when: stDownSublime.stat.exists is defined and not stDownSublime.stat.exists
+
+    - name: Extract Sublime Text
+      unarchive: src={{ DOWN }}/{{ SUBLIME }} dest=/opt
+      become: true
+      become_user: root
+
+    - name: Setup Sublime Text Symlink
+      file: src=/opt/sublime_text_3/sublime_text dest={{ OPT_BIN }}/sublime state=link
+      become: true
+      become_user: root
+
+    when: stSublime.stat.exists is defined and not stSublime.stat.exists
   
   # Setup Eclipse
   - stat: path={{ OPT_BIN }}/eclipse
@@ -47,15 +75,15 @@
   - block:
 
     # Check for redownload
-    - stat: path={{ DOWN }}/eclipse-jee-neon-1a-linux-gtk-x86_64.tar.gz
+    - stat: path={{ DOWN }}/{{ ECLIPSE }}
       register: stDownEclipse
 
     - name: Download Eclipse - Java EE
-      get_url: dest={{ DOWN }} url="http://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/neon/1a/eclipse-jee-neon-1a-linux-gtk-x86_64.tar.gz&mirror_id=1"
+      get_url: dest={{ DOWN }} url="http://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/neon/1a/{{ECLIPSE}}&mirror_id=1"
       when: stDownEclipse.stat.exists is defined and not stDownEclipse.stat.exists
 
     - name: Extract Eclipse
-      unarchive: src={{ DOWN }}/eclipse-jee-neon-1a-linux-gtk-x86_64.tar.gz dest=/opt
+      unarchive: src={{ DOWN }}/{{eclipse}} dest=/opt
       become: true
       become_user: root
 
