@@ -34,14 +34,25 @@
   - lineinfile: dest={{ HOME }}/.bash_aliases state=present insertafter=EOF create=True
       line="alias h='history'"
       regexp="^alias h='history'$"
-
+  
+  - name: Install vim
+    apt: update_cache=no name=vim install_recommends=yes
+    become: true
+    become_user: root 
+  
   # Setup Eclipse
   - stat: path={{ OPT_BIN }}/eclipse
     register: stEclipse
 
   - block:
-    - name: Download eclipse
-      get_url: dest={{ DOWN }} url=http://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/neon/1a/eclipse-jee-neon-1a-linux-gtk-x86_64.tar.gz&mirror_id=1135
+
+    # Check for redownload
+    - stat: path={{ DOWN }}/eclipse-jee-neon-1a-linux-gtk-x86_64.tar.gz
+      register: stDownEclipse
+
+    - name: Download Eclipse - Java EE
+      get_url: dest={{ DOWN }} url="http://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/neon/1a/eclipse-jee-neon-1a-linux-gtk-x86_64.tar.gz&mirror_id=1"
+      when: stDownEclipse.stat.exists is defined and not stDownEclipse.stat.exists
 
     - name: Extract Eclipse
       unarchive: src={{ DOWN }}/eclipse-jee-neon-1a-linux-gtk-x86_64.tar.gz dest=/opt
@@ -58,11 +69,5 @@
 
     - name: Install Eclipse Plugin - YAML Editor
       shell: "{{OPT_BIN}}/eclipse -nosplash -application org.eclipse.equinox.p2.director -repository http://dadacoalition.org/yedit -installIU org.dadacoalition.yedit.feature.feature.group"
-
-    - name: Install Eclipse Plugin - Egit
-      shell: "{{OPT_BIN}}/eclipse -nosplash -application org.eclipse.equinox.p2.director -repository http://download.eclipse.org/releases/neon/ -installIU org.eclipse.egit.feature.group=4.4.1.201607150455-r"
-
-    - name: Install Eclipse Plugin - Mylyn for GitHub
-      shell: "{{OPT_BIN}}/eclipse -nosplash -application org.eclipse.equinox.p2.director -repository http://download.eclipse.org/releases/neon/ -installIU org.eclipse.egit.mylyn.feature.group=4.4.1.201607150455-r"
 
     when: stEclipse.stat.exists is defined and not stEclipse.stat.exists
