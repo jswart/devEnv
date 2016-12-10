@@ -3,7 +3,7 @@
 ## Introduction
 My personal scripts to help me setup a development environment on the systems I tinker with.
 
-I like to install ansible on these systems, then have playbooks perform the major of the configuration on the machine.
+I like to install ansible on these systems, then have playbooks perform the majority of the configuration on the machine.
 
 ## Assumptions
 - You are managing Ubuntu systems with apt-get (maybe this will change someday)
