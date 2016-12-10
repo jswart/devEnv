@@ -11,4 +11,5 @@ TODO:
 -Add default git configuration (like core.editor and user info, git config --global push.default simple)
 -Add meld
 -Add meld git configuration
-
+-TODO: Add GPG key checking where possible
+-TODO: Add some better way to find the latest version URLs of SW below

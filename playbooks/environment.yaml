@@ -1,94 +1,163 @@
 ---
+# MIT License
+#
+# Copyright (c) 2016 Jake Swart
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
 # To run: ansible-playbook environment.yaml --ask-become-pass
-# TODO: Add GPG key checking where possible
-# TODO: Add some better way to find the latest version URLs of SW below
 - hosts: localhost
   vars:
-    HOME:    "{{ lookup('env', 'HOME') }}"
-    DOWN:    "{{ HOME }}/Downloads"
-    ALIAS:   "{{ HOME }}/.bash_aliases"
-    OPT_BIN: "/opt/bin"
-    SUBLIME: "sublime_text_3_build_3125_x64.tar.bz2"
-    ECLIPSE: "eclipse-jee-neon-1a-linux-gtk-x86_64.tar.gz"
+    KEYS:         "/secure/keys"
+    PASS:         "/secure/pass"
+    HOME:         "{{ lookup('env', 'HOME') }}"
+    DOWN:         "{{HOME}}/Downloads"
+    ALIAS:        "{{HOME}}/.bash_aliases"
+    OPT_BIN:      "/opt/bin"
+    SUBLIME:      "sublime_text_3_build_3125_x64.tar.bz2"
+    ECLIPSE:      "eclipse-jee-neon-1a-linux-gtk-x86_64.tar.gz"
+    JMETER_MAJOR: "3.1"
+    JMETER:       "apache-jmeter-{{JMETER_MAJOR}}.tgz"
 
   tasks:
 
-  - name: Create {{ OPT_BIN }}...
-    file: path={{ OPT_BIN }} state=directory mode=0775
+  #-----------------------------------------------------------------------
+  # Setup Common Environment (Dirs, Alaises, Env Vars)
+  #-----------------------------------------------------------------------
+  - name: Create {{OPT_BIN}}...
+    file: path={{OPT_BIN}} state=directory mode=0775
     become: yes
     become_user: root
 
   # I cannot depend on lineinfile to "do what I expect". Everytime I use a regex, it replaces the line.
   # I just want it to replace the line if it's missing. This seems to do the job:
-  - lineinfile: "dest={{ HOME }}/.bashrc state=present insertafter=EOF line='#Add {{ OPT_BIN }} to PATH'"
-  - lineinfile: "dest={{ HOME }}/.bashrc state=present insertafter=EOF line='export PATH=$PATH:{{ OPT_BIN }}'"
+  - lineinfile: "dest={{HOME}}/.bashrc state=present insertafter=EOF line='# Add {{OPT_BIN}} to PATH'"
+  - lineinfile: "dest={{HOME}}/.bashrc state=present insertafter=EOF line='export PATH=$PATH:{{OPT_BIN}}'"
 
-  # Setup Aliases
   - name: Add alias srccmds
-    lineinfile: dest={{ HOME }}/.bash_aliases state=present insertafter=EOF create=True
+    lineinfile: dest={{HOME}}/.bash_aliases state=present insertafter=EOF create=True
       line="alias srccmds='source ~/.bashrc'"
       regexp="^alias srccmds='source ~/.bashrc'$"
 
-  - lineinfile: dest={{ HOME }}/.bash_aliases state=present insertafter=EOF create=True
+  - lineinfile: dest={{HOME}}/.bash_aliases state=present insertafter=EOF create=True
       line="alias editcmds='sublime ~/.bashrc ~/.bash_aliases'"
       regexp="^alias editcmds='sublime ~/.bashrc ~/.bash_aliases'$"
 
-  - lineinfile: dest={{ HOME }}/.bash_aliases state=present insertafter=EOF create=True
+  - lineinfile: dest={{HOME}}/.bash_aliases state=present insertafter=EOF create=True
       line="alias h='history'"
       regexp="^alias h='history'$"
-  
+
+  - name: Setup Keys Dir
+    file: path={{ KEYS }} state=directory mode=0700
+    become: true
+    become_user: root
+
+  - name: Setup Pass Dir
+    file: path={{ PASS }} state=directory mode=0700
+    become: true
+    become_user: root
+
+  #-----------------------------------------------------------------------
+  # Install Ansible Required Software
+  #-----------------------------------------------------------------------
+  - pip: name=passlib
+    become: true
+    become_user: root
+
+  - name: Update apt-get Cache
+    apt: update_cache=yes install_recommends=yes
+    become: true
+    become_user: root
+    changed_when: false
+
+  - apt: update_cache=no name=libssl-dev install_recommends=yes
+    become: true
+    become_user: root
+
+  - pip: name=cryptography
+    become: true
+    become_user: root
+
+  #--------------------------------------------------------------------
+  # Install Generic Software Packages
+  #--------------------------------------------------------------------
   - name: Install vim
     apt: update_cache=no name=vim install_recommends=yes
     become: true
-    become_user: root 
+    become_user: root
 
-  # Setup sublime
-  - stat: path={{ OPT_BIN }}/sublime
+  - name: Install gnupg2
+    apt: update_cache=no name=gnupg2 install_recommends=yes
+    become: true
+    become_user: root
+
+  #--------------------------------------------------------------------
+  # Install Generic Software Packages
+  #--------------------------------------------------------------------
+  - stat: path={{OPT_BIN}}/sublime
     register: stSublime
 
   - block:
     
-    # Check for redownload
-    - stat: path={{ DOWN }}/{{ SUBLIME }}
+    - name: Prevent Redownload
+      stat: path={{DOWN}}/{{ SUBLIME }}
       register: stDownSublime
 
     - name: Download Sublime Text - Java EE
-      get_url: dest={{ DOWN }} url=http://download.sublimetext.com/{{ SUBLIME }}
+      get_url: dest={{DOWN}} url=http://download.sublimetext.com/{{ SUBLIME }}
       when: stDownSublime.stat.exists is defined and not stDownSublime.stat.exists
 
     - name: Extract Sublime Text
-      unarchive: src={{ DOWN }}/{{ SUBLIME }} dest=/opt
+      unarchive: src={{DOWN}}/{{ SUBLIME }} dest=/opt
       become: true
       become_user: root
 
     - name: Setup Sublime Text Symlink
-      file: src=/opt/sublime_text_3/sublime_text dest={{ OPT_BIN }}/sublime state=link
+      file: src=/opt/sublime_text_3/sublime_text dest={{OPT_BIN}}/sublime state=link
       become: true
       become_user: root
 
     when: stSublime.stat.exists is defined and not stSublime.stat.exists
   
-  # Setup Eclipse
-  - stat: path={{ OPT_BIN }}/eclipse
+  #--------------------------------------------------------------------
+  # Eclipse Download, Install, Configure
+  #--------------------------------------------------------------------
+  - stat: path={{OPT_BIN}}/eclipse
     register: stEclipse
 
   - block:
 
-    # Check for redownload
-    - stat: path={{ DOWN }}/{{ ECLIPSE }}
+    - name: Prevent Redownload
+      stat: path={{DOWN}}/{{ECLIPSE}}
       register: stDownEclipse
 
     - name: Download Eclipse - Java EE
-      get_url: dest={{ DOWN }} url="http://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/neon/1a/{{ECLIPSE}}&mirror_id=1"
+      get_url: dest={{DOWN}} url="http://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/neon/1a/{{ECLIPSE}}&mirror_id=1"
       when: stDownEclipse.stat.exists is defined and not stDownEclipse.stat.exists
 
     - name: Extract Eclipse
-      unarchive: src={{ DOWN }}/{{eclipse}} dest=/opt
+      unarchive: src={{DOWN}}/{{ECLIPSE}} dest=/opt
       become: true
       become_user: root
 
     - name: Setup Eclipse Symlink
-      file: src=/opt/eclipse/eclipse dest={{ OPT_BIN }}/eclipse state=link
+      file: src=/opt/eclipse/eclipse dest={{OPT_BIN}}/eclipse state=link
       become: true
       become_user: root
 
@@ -99,3 +168,55 @@
       shell: "{{OPT_BIN}}/eclipse -nosplash -application org.eclipse.equinox.p2.director -repository http://dadacoalition.org/yedit -installIU org.dadacoalition.yedit.feature.feature.group"
 
     when: stEclipse.stat.exists is defined and not stEclipse.stat.exists
+
+  #--------------------------------------------------------------------
+  # JMeter Download, Install, Verify, Configure
+  #--------------------------------------------------------------------
+  - stat: path={{OPT_BIN}}/jmeter
+    register: stJmeter
+
+  - block:
+
+    - name: Prevent Redownload
+      stat: path={{DOWN}}/{{JMETER}}
+      register: stDownjmeter
+
+    - name: Download jmeter
+      get_url: dest={{DOWN}} url="http://mirror.its.dal.ca/apache//jmeter/binaries/{{JMETER}}"
+      when: stDownjmeter.stat.exists is defined and not stDownjmeter.stat.exists
+
+    - name: Download jmeter PGP
+      get_url: dest={{DOWN}} url="https://www.apache.org/dist/jmeter/binaries/{{JMETER}}.asc"
+      when: stDownjmeter.stat.exists is defined and not stDownjmeter.stat.exists
+
+    - name: Authenicate jmeter - Get PGP Key
+      command: gpg --keyserver pgpkeys.mit.edu --recv-key 0612B399
+      register: recdKey
+
+    - name: Authenicate jmeter - Verify Key (trust network is not confirmed)
+      command: gpg --verify {{DOWN}}/{{JMETER}}.asc {{DOWN}}/{{JMETER}}
+      register: verkey
+
+    - name: Extract jmeter
+      unarchive: src={{DOWN}}/{{JMETER}} dest=/opt
+      become: true
+      become_user: root
+      when: recdKey|succeeded and verkey|succeeded
+    
+    - name: Add alias jmeter
+      lineinfile: "dest={{HOME}}/.bashrc state=present insertafter=EOF line='# No GUI jmeter'"
+    
+    - lineinfile: dest={{HOME}}/.bashrc state=present insertafter=EOF create=True
+        line='jm () { jmeter -n "$@"; }'
+        regexp="^jm"
+
+    - name: Setup jmeter Symlink
+      file: src=/opt/apache-jmeter-{{JMETER_MAJOR}}/bin/jmeter dest={{OPT_BIN}}/jmeter state=link
+      become: true
+      become_user: root
+
+    when: stJmeter.stat.exists is defined and not stJmeter.stat.exists
+
+
+  
+
