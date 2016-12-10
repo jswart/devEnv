@@ -1,4 +1,5 @@
 ---
+
 # MIT License
 #
 # Copyright (c) 2016 Jake Swart
@@ -12,7 +13,7 @@
 #
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,10 +31,31 @@
     DOWN:         "{{HOME}}/Downloads"
     ALIAS:        "{{HOME}}/.bash_aliases"
     OPT_BIN:      "/opt/bin"
+    CHROMIUM:     "chrome-linux.zip"
     SUBLIME:      "sublime_text_3_build_3125_x64.tar.bz2"
     ECLIPSE:      "eclipse-jee-neon-1a-linux-gtk-x86_64.tar.gz"
     JMETER_MAJOR: "3.1"
     JMETER:       "apache-jmeter-{{JMETER_MAJOR}}.tgz"
+
+  #-----------------------------------------------------------------------
+  # Setup the Bare Minimum to Run Ansible on a Target Machine
+  #-----------------------------------------------------------------------
+  pre_tasks:
+
+    - raw: sudo apt-get -y install python-simplejson
+      changed_when: false
+    - raw: sudo apt-get -y install python-dev
+      changed_when: false
+    - raw: sudo apt-get -y install python-setuptools
+      changed_when: false
+
+    - name: Install pip
+      raw: sudo easy_install pip
+      changed_when: false
+
+    - name: Install python-apt
+      raw: sudo apt-get -y install python-apt
+      changed_when: false
 
   tasks:
 
@@ -108,23 +130,70 @@
     become_user: root
 
   #--------------------------------------------------------------------
-  # Install Generic Software Packages
+  # Git Download, Install, Configure
+  #--------------------------------------------------------------------
+  - command: add-apt-repository ppa:git-core/ppa -y
+    become: true
+    become_user: root
+    register: gitInstall
+    changed_when: false
+
+  - name: Install git
+    apt: update_cache=yes name=git install_recommends=yes
+    become: true
+    become_user: root
+    when: gitInstall|succeeded
+    changed_when: false
+
+  # TODO: Add configuration
+
+  #--------------------------------------------------------------------
+  # Chromium Download, Install
+  #--------------------------------------------------------------------
+  # No signed chromium is available afaik, but this is the direct src.
+  - stat: path={{OPT_BIN}}/chrome
+    register: stChromium
+
+  - block:
+
+    - name: Prevent Redownload
+      stat: path={{DOWN}}/{{CHROMIUM}}
+      register: stDownChromium
+
+    - name: Download Chromium
+      get_url: dest={{DOWN}} url=https://download-chromium.appspot.com/dl/Linux_x64?type=snapshots
+      when: stDownChromium.stat.exists is defined and not stDownChromium.stat.exists
+
+    - name: Extract Chromium
+      unarchive: src={{DOWN}}/{{CHROMIUM}} dest=/opt owner={{ansible_user_id}} group={{ansible_user_id}} mode=0755
+      become: true
+      become_user: root
+
+    - name: Setup Chromium Symlink
+      file: src=/opt/chrome-linux/chrome dest={{OPT_BIN}}/chrome state=link
+      become: true
+      become_user: root
+
+    when: stChromium.stat.exists is defined and not stChromium.stat.exists
+
+  #--------------------------------------------------------------------
+  # Sublime Download, Install, Configure
   #--------------------------------------------------------------------
   - stat: path={{OPT_BIN}}/sublime
     register: stSublime
 
   - block:
-    
+
     - name: Prevent Redownload
-      stat: path={{DOWN}}/{{ SUBLIME }}
+      stat: path={{DOWN}}/{{SUBLIME}}
       register: stDownSublime
 
-    - name: Download Sublime Text - Java EE
-      get_url: dest={{DOWN}} url=http://download.sublimetext.com/{{ SUBLIME }}
+    - name: Download Sublime Text
+      get_url: dest={{DOWN}} url=http://download.sublimetext.com/{{SUBLIME}}
       when: stDownSublime.stat.exists is defined and not stDownSublime.stat.exists
 
     - name: Extract Sublime Text
-      unarchive: src={{DOWN}}/{{ SUBLIME }} dest=/opt
+      unarchive: src={{DOWN}}/{{SUBLIME}} dest=/opt
       become: true
       become_user: root
 
@@ -134,7 +203,7 @@
       become_user: root
 
     when: stSublime.stat.exists is defined and not stSublime.stat.exists
-  
+
   #--------------------------------------------------------------------
   # Eclipse Download, Install, Configure
   #--------------------------------------------------------------------
@@ -186,14 +255,16 @@
       when: stDownjmeter.stat.exists is defined and not stDownjmeter.stat.exists
 
     - name: Download jmeter PGP
-      get_url: dest={{DOWN}} url="https://www.apache.org/dist/jmeter/binaries/{{JMETER}}.asc"
+      get_url: dest={{DOWN}} url="http://www.apache.org/dist/jmeter/binaries/{{JMETER}}.asc"
       when: stDownjmeter.stat.exists is defined and not stDownjmeter.stat.exists
 
-    - name: Authenicate jmeter - Get PGP Key
+    - name: Authenticate jmeter - Get PGP Key
       command: gpg --keyserver pgpkeys.mit.edu --recv-key 0612B399
       register: recdKey
 
-    - name: Authenicate jmeter - Verify Key (trust network is not confirmed)
+      # gpg --export 3B4FE6ACC0B21F32 | apt-key add --
+
+    - name: Authenticate jmeter - Verify Key (trust network is not confirmed)
       command: gpg --verify {{DOWN}}/{{JMETER}}.asc {{DOWN}}/{{JMETER}}
       register: verkey
 
