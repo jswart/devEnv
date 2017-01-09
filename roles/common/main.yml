@@ -40,28 +40,35 @@
   #-----------------------------------------------------------------------
   # Setup the Bare Minimum to Run Ansible on a Target Machine
   #-----------------------------------------------------------------------
+  # Kludges for for Ubuntu 14.04.
+  # TODO: Needs to be retested
   pre_tasks:
 
-    - raw: sudo apt-get -y install python-simplejson
-      changed_when: false
-    - raw: sudo apt-get -y install python-dev
-      changed_when: false
-    - raw: sudo apt-get -y install python-setuptools
-      changed_when: false
+    - block:
+      - raw: sudo apt-get -y install python-simplejson
+        changed_when: false
+        when: ansible_distribution == 'Ubuntu'
+      - raw: sudo apt-get -y install python-dev
+        changed_when: false
+      - raw: sudo apt-get -y install python-setuptools
+        changed_when: false
 
-    - name: Install pip
-      raw: sudo easy_install pip
-      changed_when: false
+      - name: Install pip
+        raw: sudo easy_install pip
+        changed_when: false
 
-    - name: Install python-apt
-      raw: sudo apt-get -y install python-apt
-      changed_when: false
+      - name: Install python-apt
+        raw: sudo apt-get -y install python-apt
+        changed_when: false
+      when: ansible_distribution == "Ubuntu" and ansible_distribution_version == "14.04"
 
   tasks:
 
   #-----------------------------------------------------------------------
   # Setup Common Environment (Dirs, Alaises, Env Vars)
   #-----------------------------------------------------------------------
+  - debug:
+      msg: ""
   - name: Create {{OPT_BIN}}...
     file: path={{OPT_BIN}} state=directory mode=0775
     become: yes
@@ -71,6 +78,7 @@
   # I just want it to replace the line if it's missing. This seems to do the job:
   - lineinfile: "dest={{HOME}}/.bashrc state=present insertafter=EOF line='# Add {{OPT_BIN}} to PATH'"
   - lineinfile: "dest={{HOME}}/.bashrc state=present insertafter=EOF line='export PATH=$PATH:{{OPT_BIN}}'"
+  - lineinfile: "dest={{HOME}}/.bashrc state=present insertafter=EOF line='source {{HOME}}/.bash_aliases'"
 
   - name: Add alias srccmds
     lineinfile: dest={{HOME}}/.bash_aliases state=present insertafter=EOF create=True
@@ -132,18 +140,28 @@
   #--------------------------------------------------------------------
   # Git Download, Install, Configure
   #--------------------------------------------------------------------
-  - command: add-apt-repository ppa:git-core/ppa -y
+  - name: Install git ppa
+    command: add-apt-repository ppa:git-core/ppa -y
     become: true
     become_user: root
     register: gitInstall
-    changed_when: false
+    when: false
 
-  - name: Install git
-    apt: update_cache=yes name=git install_recommends=yes
+  # Kludge to a problem I ran into on Mint 17.1
+  - name: Force install of older samba tools
+    shell: apt-get -f install
+    args:
+      warn: no
     become: true
     become_user: root
     when: gitInstall|succeeded
     changed_when: false
+
+  - name: Install git
+    apt: name=git install_recommends=yes
+    become: true
+    become_user: root
+    when: gitInstall|succeeded
 
   # TODO: Add configuration
 

@@ -1,0 +1,10 @@
+deb http://ppa.launchpad.net/ansible/ansible/ubuntu trusty main
+deb-src http://ppa.launchpad.net/ansible/ansible/ubuntu trusty main
+deb http://ppa.launchpad.net/git-core/ppa/ubuntu trusty main
+deb-src http://ppa.launchpad.net/git-core/ppa/ubuntu trusty main
+deb http://packages.linuxmint.com rebecca main upstream import  #id:linuxmint_main
+deb http://extra.linuxmint.com rebecca main #id:linuxmint_extra
+deb http://archive.ubuntu.com/ubuntu trusty main restricted universe multiverse
+deb http://archive.ubuntu.com/ubuntu trusty-updates main restricted universe multiverse
+deb http://security.ubuntu.com/ubuntu/ trusty-security main restricted universe multiverse
+deb http://archive.canonical.com/ubuntu/ trusty partner
