@@ -36,6 +36,8 @@
     ECLIPSE:      "eclipse-jee-neon-1a-linux-gtk-x86_64.tar.gz"
     JMETER_MAJOR: "3.1"
     JMETER:       "apache-jmeter-{{JMETER_MAJOR}}.tgz"
+  become: yes
+  become_user: root
 
   #-----------------------------------------------------------------------
   # Setup the Bare Minimum to Run Ansible on a Target Machine
@@ -67,8 +69,6 @@
   #-----------------------------------------------------------------------
   # Setup Common Environment (Dirs, Alaises, Env Vars)
   #-----------------------------------------------------------------------
-  - debug:
-      msg: ""
   - name: Create {{OPT_BIN}}...
     file: path={{OPT_BIN}} state=directory mode=0775
     become: yes
@@ -95,55 +95,46 @@
 
   - name: Setup Keys Dir
     file: path={{ KEYS }} state=directory mode=0700
-    become: true
-    become_user: root
 
   - name: Setup Pass Dir
     file: path={{ PASS }} state=directory mode=0700
-    become: true
-    become_user: root
 
   #-----------------------------------------------------------------------
   # Install Ansible Required Software
   #-----------------------------------------------------------------------
-  - pip: name=passlib
-    become: true
-    become_user: root
+  - name: Install passlib
+    pip: name=passlib
 
   - name: Update apt-get Cache
     apt: update_cache=yes install_recommends=yes
-    become: true
-    become_user: root
     changed_when: false
 
-  - apt: update_cache=no name=libssl-dev install_recommends=yes
-    become: true
-    become_user: root
+  - name: Install libssl-dev
+    apt: update_cache=no name=libssl-dev install_recommends=yes
 
-  - pip: name=cryptography
-    become: true
-    become_user: root
+  - name: Install cryptography
+    pip: name=cryptography
 
   #--------------------------------------------------------------------
   # Install Generic Software Packages
   #--------------------------------------------------------------------
   - name: Install vim
     apt: update_cache=no name=vim install_recommends=yes
-    become: true
-    become_user: root
 
   - name: Install gnupg2
     apt: update_cache=no name=gnupg2 install_recommends=yes
-    become: true
-    become_user: root
+
+  # Source chromium doesn't work out of the box with Mint. See commit-
+  # dfcbbcb for downloading the latest x64 chrome. Something about cake
+  # and eating it... let's just go back to apt-get.
+  - name: Install chromium-browser
+    apt: update_cache=no name=chromium-browser install_recommends=yes
 
   #--------------------------------------------------------------------
   # Git Download, Install, Configure
   #--------------------------------------------------------------------
   - name: Install git ppa
     command: add-apt-repository ppa:git-core/ppa -y
-    become: true
-    become_user: root
     register: gitInstall
     when: false
 
@@ -152,47 +143,12 @@
     shell: apt-get -f install
     args:
       warn: no
-    become: true
-    become_user: root
     when: gitInstall|succeeded
     changed_when: false
 
   - name: Install git
     apt: name=git install_recommends=yes
-    become: true
-    become_user: root
     when: gitInstall|succeeded
-
-  # TODO: Add configuration
-
-  #--------------------------------------------------------------------
-  # Chromium Download, Install
-  #--------------------------------------------------------------------
-  # No signed chromium is available afaik, but this is the direct src.
-  - stat: path={{OPT_BIN}}/chrome
-    register: stChromium
-
-  - block:
-
-    - name: Prevent Redownload
-      stat: path={{DOWN}}/{{CHROMIUM}}
-      register: stDownChromium
-
-    - name: Download Chromium
-      get_url: dest={{DOWN}} url=https://download-chromium.appspot.com/dl/Linux_x64?type=snapshots
-      when: stDownChromium.stat.exists is defined and not stDownChromium.stat.exists
-
-    - name: Extract Chromium
-      unarchive: src={{DOWN}}/{{CHROMIUM}} dest=/opt owner={{ansible_user_id}} group={{ansible_user_id}} mode=0755
-      become: true
-      become_user: root
-
-    - name: Setup Chromium Symlink
-      file: src=/opt/chrome-linux/chrome dest={{OPT_BIN}}/chrome state=link
-      become: true
-      become_user: root
-
-    when: stChromium.stat.exists is defined and not stChromium.stat.exists
 
   #--------------------------------------------------------------------
   # Sublime Download, Install, Configure
@@ -212,13 +168,9 @@
 
     - name: Extract Sublime Text
       unarchive: src={{DOWN}}/{{SUBLIME}} dest=/opt
-      become: true
-      become_user: root
 
     - name: Setup Sublime Text Symlink
       file: src=/opt/sublime_text_3/sublime_text dest={{OPT_BIN}}/sublime state=link
-      become: true
-      become_user: root
 
     when: stSublime.stat.exists is defined and not stSublime.stat.exists
 
@@ -240,13 +192,9 @@
 
     - name: Extract Eclipse
       unarchive: src={{DOWN}}/{{ECLIPSE}} dest=/opt
-      become: true
-      become_user: root
 
     - name: Setup Eclipse Symlink
       file: src=/opt/eclipse/eclipse dest={{OPT_BIN}}/eclipse state=link
-      become: true
-      become_user: root
 
     - name: Install Eclipse Plugin - Shell Script Editor
       shell: "{{OPT_BIN}}/eclipse -nosplash -application org.eclipse.equinox.p2.director -repository http://download.eclipse.org/releases/neon/,http://download.eclipse.org/technology/dltk/updates/,https://sourceforge.net/projects/shelled/files/shelled/update/ -installIU net.sourceforge.shelled.feature.group"
@@ -288,8 +236,6 @@
 
     - name: Extract jmeter
       unarchive: src={{DOWN}}/{{JMETER}} dest=/opt
-      become: true
-      become_user: root
       when: recdKey|succeeded and verkey|succeeded
     
     - name: Add alias jmeter
@@ -301,8 +247,6 @@
 
     - name: Setup jmeter Symlink
       file: src=/opt/apache-jmeter-{{JMETER_MAJOR}}/bin/jmeter dest={{OPT_BIN}}/jmeter state=link
-      become: true
-      become_user: root
 
     when: stJmeter.stat.exists is defined and not stJmeter.stat.exists
 

@@ -18,7 +18,7 @@ I like to install ansible on these systems, then have playbooks perform the majo
 - source ~/.bashrc
 
 ** Step 2: **
-- ansible-playbook playbooks/environment.yaml --ask-become-pass
+- ansible-playbook roles/common/main.yaml --ask-become-pass
 
 ## Installed Software
 - pip
