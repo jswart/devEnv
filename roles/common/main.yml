@@ -24,7 +24,11 @@
 
 # To run: ansible-playbook environment.yaml --ask-become-pass
 - hosts: localhost
+  roles:
+    - role: geerlingguy.git
   vars:
+    git_install_from_source: true
+    git_install_from_source_force_update: true
     KEYS:         "/secure/keys"
     PASS:         "/secure/pass"
     HOME:         "{{ lookup('env', 'HOME') }}"
@@ -38,6 +42,7 @@
     JMETER:       "apache-jmeter-{{JMETER_MAJOR}}.tgz"
   become: yes
   become_user: root
+
 
   #-----------------------------------------------------------------------
   # Setup the Bare Minimum to Run Ansible on a Target Machine
@@ -131,26 +136,6 @@
     apt: update_cache=no name=chromium-browser install_recommends=yes
 
   #--------------------------------------------------------------------
-  # Git Download, Install, Configure
-  #--------------------------------------------------------------------
-  - name: Install git ppa
-    command: add-apt-repository ppa:git-core/ppa -y
-    register: gitInstall
-    when: false
-
-  # Kludge to a problem I ran into on Mint 17.1
-  - name: Force install of older samba tools
-    shell: apt-get -f install
-    args:
-      warn: no
-    when: gitInstall|succeeded
-    changed_when: false
-
-  - name: Install git
-    apt: name=git install_recommends=yes
-    when: gitInstall|succeeded
-
-  #--------------------------------------------------------------------
   # Sublime Download, Install, Configure
   #--------------------------------------------------------------------
   - stat: path={{OPT_BIN}}/sublime
@@ -173,6 +158,30 @@
       file: src=/opt/sublime_text_3/sublime_text dest={{OPT_BIN}}/sublime state=link
 
     when: stSublime.stat.exists is defined and not stSublime.stat.exists
+
+  #--------------------------------------------------------------------
+  # Install JDK 8
+  #--------------------------------------------------------------------
+  - name: Install openjdk-r ppa
+    command: add-apt-repository ppa:openjdk-r/ppa -y
+    register: openjdk
+    when: false
+
+  - name: Update apt-get cache
+    apt: update_cache=yes install_recommends=yes
+    changed_when: false
+
+  - name: Install openjdk-8-jdk
+    apt: name=openjdk-8-jdk install_recommends=yes
+
+  - name: Get path of Java 1.8
+    shell: "update-java-alternatives -l | grep '1.8' | awk '{print $3}'"
+    register: javaPath
+    changed_when: false
+
+  - name: Set JDK 8 as Default
+    command: update-java-alternatives -s {{javaPath.stdout}}
+    changed_when: false
 
   #--------------------------------------------------------------------
   # Eclipse Download, Install, Configure

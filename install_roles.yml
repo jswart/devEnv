@@ -1,0 +1,12 @@
+# install_roles.yml
+
+# from galaxy
+- src: geerlingguy.mysql
+- src: geerlingguy.nginx
+- src: geerlingguy.git
+- src: geerlingguy.apache
+
+# Stuff to try and look into
+#- src: angstwad.docker_ubuntu
+#- src: geerlingguy.firewall
+#- src: geerlingguy.daemonize

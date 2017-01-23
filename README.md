@@ -10,7 +10,7 @@ I like to install ansible on these systems, then have playbooks perform the majo
 
 ## Security
 - I have begun trying to verify gpg-keys against software that was not downloaded through the package manager.
-- I avoid ppas, unless managed directly by the source's creators.
+- I avoid ppas, unless managed directly by the source's creators, or confirmed to be a reputable source.
 
 ## Usage
 ** Step 1: **
@@ -34,6 +34,7 @@ I like to install ansible on these systems, then have playbooks perform the majo
   - passlib
   - cryptography
 - apt-get
+  - jdk8
   - python-simplejson
   - libssl-dev
   - python-dev
@@ -45,11 +46,9 @@ I like to install ansible on these systems, then have playbooks perform the majo
 
 ## TODO List:
 - [ ] Move to using https for all get_urls if possible
-- [ ] Just run the script as root instead and forget become user? or use a block?
 - [ ] Add sublime packages (yeah that's going to be fun...)
 - [ ] Add default git configuration (like core.editor and user info, git config --global push.default simple)
 - [ ] Add meld
 - [ ] Add meld git configuration
 - [ ] Add GPG key checking where possible
-- [ ] Add some better way to find the latest version URLs of SW
 - [ ] Add custom bashrc command line colors and such
