@@ -21,7 +21,6 @@ I like to install ansible on these systems, then have playbooks perform the majo
 - ansible-playbook roles/common/main.yaml --ask-become-pass
 
 ## Installed Software
-- pip
 - ansible
 - eclipse Java EE
   - Shell Script Editor
@@ -45,10 +44,9 @@ I like to install ansible on these systems, then have playbooks perform the majo
   - git
 
 ## TODO List:
-- [ ] Move to using https for all get_urls if possible
-- [ ] Add sublime packages (yeah that's going to be fun...)
-- [ ] Add default git configuration (like core.editor and user info, git config --global push.default simple)
 - [ ] Add meld
 - [ ] Add meld git configuration
+- [ ] Add sublime packages (yeah that's going to be fun...)
+- [ ] Add default git configuration (like core.editor and user info, git config --global push.default simple)
 - [ ] Add GPG key checking where possible
 - [ ] Add custom bashrc command line colors and such
