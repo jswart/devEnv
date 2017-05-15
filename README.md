@@ -6,18 +6,21 @@ My personal scripts to help me setup a development environment on the systems I 
 I like to install ansible on these systems, then have playbooks perform the majority of the configuration on the machine.
 
 ## Assumptions
-- You are managing Ubuntu systems with apt-get (maybe this will change someday)
+- You package manager is apt-get.
 
 ## Security
-- I have begun trying to verify gpg-keys against software that was not downloaded through the package manager.
+- I try to verify gpg-keys when I can
 - I avoid ppas, unless managed directly by the source's creators, or confirmed to be a reputable source.
 
 ## Usage
-** Step 1: **
+** Step 1: Install git **
+- sudo apt-get install git
+
+** Step 2: Install ansible **
 - ./setupAnsible.sh
 - source ~/.bashrc
 
-** Step 2: **
+** Step 3: Run the ansible playbook **
 - ansible-playbook roles/common/main.yaml --ask-become-pass
 
 ## Installed Software
@@ -25,11 +28,13 @@ I like to install ansible on these systems, then have playbooks perform the majo
 - eclipse Java EE
   - Shell Script Editor
   - YAML Editor
-- chromium
+- chromium-browser
+- meld
+- unzip
 - sublime
   -  
 - jmeter
-- pip
+- python-pip
   - passlib
   - cryptography
 - apt-get
@@ -44,8 +49,8 @@ I like to install ansible on these systems, then have playbooks perform the majo
   - git
 
 ## TODO List:
-- [ ] Add meld
 - [ ] Add meld git configuration
+- [ ] Remove default directories that I don't use
 - [ ] Add sublime packages (yeah that's going to be fun...)
 - [ ] Add default git configuration (like core.editor and user info, git config --global push.default simple)
 - [ ] Add GPG key checking where possible
