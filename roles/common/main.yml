@@ -109,7 +109,7 @@
     changed_when: false
 
   - name: Install pip
-    apt: update_cache=no name=python-pip+ install_recommends=yes
+    apt: update_cache=no name=python-pip install_recommends=yes
     changed_when: false
 
   - name: Install passlib
