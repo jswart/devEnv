@@ -23,6 +23,9 @@ I like to install ansible on these systems, then have playbooks perform the majo
 ** Step 3: Run the ansible playbook **
 - ansible-playbook roles/common/main.yml --ask-become-pass
 
+## Dangerous stuff
+- Removes useless home dirs (videos, templates, music, etc.)
+
 ## Installed Software
 - ansible
 - eclipse Java EE
@@ -47,11 +50,17 @@ I like to install ansible on these systems, then have playbooks perform the majo
   - vim
   - gnupg2
   - git
+  - maven
+  - openssh-server
+  - mysql-server
+
 
 ## TODO List:
 - [ ] Add meld git configuration
-- [ ] Remove default directories that I don't use
 - [ ] Add sublime packages (yeah that's going to be fun...)
 - [ ] Add default git configuration (like core.editor and user info, git config --global push.default simple)
-- [ ] Add GPG key checking where possible
 - [ ] Add custom bashrc command line colors and such
+- [ ] Maybe add 'server' role
+- [ ] Add docker
+- [ ] Add gitprompt and git autocomplete
+- [ ] Use python environments to protect against python dep issues

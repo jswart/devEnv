@@ -39,7 +39,6 @@
   become: yes
   become_user: root
 
-
   #-----------------------------------------------------------------------
   # Setup the Bare Minimum to Run Ansible on a Target Machine
   #-----------------------------------------------------------------------
@@ -121,6 +120,20 @@
   - name: Install cryptography
     pip: name=cryptography
 
+  #-----------------------------------------------------------------------
+  # Dangerous Stuff
+  #-----------------------------------------------------------------------
+  
+  - name: Remove default home directories
+    file: path='{{ item.src }}' state=absent
+    with_items:
+      - { src: "{{HOME}}/Videos" }
+      - { src: "{{HOME}}/Pictures" }
+      - { src: "{{HOME}}/Public" }
+      - { src: "{{HOME}}/Music" }
+      - { src: "{{HOME}}/Templates" }
+      - { src: "{{HOME}}/Documents" }
+
   #--------------------------------------------------------------------
   # Install Generic Software Packages
   #--------------------------------------------------------------------
@@ -141,6 +154,9 @@
   # and eating it... let's just go back to apt-get.
   - name: Install chromium-browser
     apt: update_cache=no name=chromium-browser install_recommends=yes
+
+  - name: Install maven
+    apt: update_cache=no name=maven install_recommends=yes
 
   #--------------------------------------------------------------------
   # Sublime Download, Install, Configure
@@ -265,3 +281,12 @@
       file: src=/opt/apache-jmeter-{{JMETER_MAJOR}}/bin/jmeter dest={{OPT_BIN}}/jmeter state=link
 
     when: stJmeter.stat.exists is defined and not stJmeter.stat.exists
+
+  #--------------------------------------------------------------------
+  # Install Server Software Packages
+  #--------------------------------------------------------------------
+  - name: Install openssh-server
+    apt: update_cache=no name=openssh-server install_recommends=yes
+
+  - name: Install mysql-server
+    apt: update_cache=no name=mysql-server install_recommends=yes
