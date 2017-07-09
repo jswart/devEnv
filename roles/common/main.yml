@@ -27,6 +27,7 @@
   vars:
     KEYS:         "/secure/keys"
     PASS:         "/secure/pass"
+    USER:         "{{ lookup('env', 'USER') }}"
     HOME:         "{{ lookup('env', 'HOME') }}"
     DOWN:         "{{HOME}}/Downloads"
     ALIAS:        "{{HOME}}/.bash_aliases"
@@ -71,8 +72,6 @@
   #-----------------------------------------------------------------------
   - name: Create {{OPT_BIN}}...
     file: path={{OPT_BIN}} state=directory mode=0775
-    become: yes
-    become_user: root
 
   # I cannot depend on lineinfile to "do what I expect". Everytime I use a regex, it replaces the line.
   # I just want it to replace the line if it's missing. This seems to do the job:
@@ -149,6 +148,9 @@
   - name: Install unzip
     apt: update_cache=no name=unzip install_recommends=yes
 
+  - name: Install git
+    apt: update_cache=no name=git install_recommends=yes
+
   # Source chromium doesn't work out of the box with Mint. See commit-
   # dfcbbcb for downloading the latest x64 chrome. Something about cake
   # and eating it... let's just go back to apt-get.
@@ -157,6 +159,7 @@
 
   - name: Install maven
     apt: update_cache=no name=maven install_recommends=yes
+
 
   #--------------------------------------------------------------------
   # Sublime Download, Install, Configure
@@ -290,3 +293,22 @@
 
   - name: Install mysql-server
     apt: update_cache=no name=mysql-server install_recommends=yes
+
+  #--------------------------------------------------------------------
+  # Configure git
+  #--------------------------------------------------------------------  
+  - name: Configure git
+    command: "{{ item }}" 
+
+    with_items:
+    - git config --global push.default simple
+    - git config --global diff.tool meld
+    - git config --global difftool.meld.path "/usr/bin/meld"
+    - git config --global difftool.prompt false
+    - git config --global merge.tool meld
+    - git config --global mergetool.meld.path "/usr/bin/meld"
+    - git config --global mergetool.prompt false
+    - git config --global core.autocrlf false
+    - git config --global core.editor {{OPT_BIN}}/sublime
+    changed_when: false
+    become_user: "{{USER}}"

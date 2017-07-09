@@ -56,9 +56,7 @@ I like to install ansible on these systems, then have playbooks perform the majo
 
 
 ## TODO List:
-- [ ] Add meld git configuration
-- [ ] Add sublime packages (yeah that's going to be fun...)
-- [ ] Add default git configuration (like core.editor and user info, git config --global push.default simple)
+- [ ] Add sublime packages
 - [ ] Add custom bashrc command line colors and such
 - [ ] Maybe add 'server' role
 - [ ] Add docker
