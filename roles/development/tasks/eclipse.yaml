@@ -1,0 +1,32 @@
+---
+  #--------------------------------------------------------------------
+  # Eclipse Download, Install, Configure
+  #--------------------------------------------------------------------
+  - stat: path={{packages_dir}}/eclipse
+    register: stEclipse
+
+  - block:
+
+    - name: Prevent Redownload
+      stat: path={{down}}/{{eclipse}}
+      register: stDownEclipse
+
+    - name: Download Eclipse - Java EE
+      get_url: 
+        dest: "{{down}}" 
+        url: "https://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/neon/1a/{{eclipse}}&mirror_id=1"
+      when: stDownEclipse.stat.exists is defined and not stDownEclipse.stat.exists
+
+    - name: Extract Eclipse
+      unarchive: src="{{down}}/{{eclipse}}" dest=/opt
+
+    - name: Setup Eclipse Symlink
+      file: src=/opt/eclipse/eclipse dest={{packages_dir}}/eclipse state=link
+
+    - name: Install Eclipse Plugin - Shell Script Editor
+      shell: "{{packages_dir}}/eclipse -nosplash -application org.eclipse.equinox.p2.director -repository http://download.eclipse.org/releases/neon/,http://download.eclipse.org/technology/dltk/updates/,http://sourceforge.net/projects/shelled/files/shelled/update/ -installIU net.sourceforge.shelled.feature.group"
+
+    - name: Install Eclipse Plugin - YAML Editor
+      shell: "{{packages_dir}}/eclipse -nosplash -application org.eclipse.equinox.p2.director -repository http://dadacoalition.org/yedit -installIU org.dadacoalition.yedit.feature.feature.group"
+
+    when: stEclipse.stat.exists is defined and not stEclipse.stat.exists

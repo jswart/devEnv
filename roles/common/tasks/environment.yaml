@@ -1,0 +1,40 @@
+---
+  
+  #-----------------------------------------------------------------------
+  # Setup Common Environment (Dirs, Alaises, Env Vars)
+  #-----------------------------------------------------------------------
+  - name: Create {{packages_dir}}...
+    file: path={{packages_dir}} state=directory mode=0775
+
+  # I cannot depend on lineinfile to "do what I expect". Everytime I use a regex, it replaces the line.
+  # I just want it to replace the line if it's missing. This seems to do the job:
+  - lineinfile: "dest={{home}}/.bashrc state=present insertafter=EOF line='# Add {{packages_dir}} to PATH'"
+  - lineinfile: "dest={{home}}/.bashrc state=present insertafter=EOF line='export PATH=$PATH:{{packages_dir}}'"
+  - lineinfile: "dest={{home}}/.bashrc state=present insertafter=EOF line='source {{home}}/.bash_aliases'"
+
+  - name: Add alias srccmds
+    lineinfile: dest={{home}}/.bash_aliases state=present insertafter=EOF create=True
+      line="alias srccmds='source ~/.bashrc'"
+      regexp="^alias srccmds='source ~/.bashrc'$"
+
+  - lineinfile: dest={{home}}/.bash_aliases state=present insertafter=EOF create=True
+      line="alias editcmds='sublime ~/.bashrc ~/.bash_aliases'"
+      regexp="^alias editcmds='sublime ~/.bashrc ~/.bash_aliases'$"
+
+  - lineinfile: dest={{home}}/.bash_aliases state=present insertafter=EOF create=True
+      line="alias h='history'"
+      regexp="^alias h='history'$"
+
+  #-----------------------------------------------------------------------
+  # Dangerous Stuff
+  #-----------------------------------------------------------------------
+  - name: Remove default home directories
+    file: path='{{ item.src }}' state=absent
+    with_items:
+      - { src: "{{home}}/Videos" }
+      - { src: "{{home}}/Pictures" }
+      - { src: "{{home}}/Public" }
+      - { src: "{{home}}/Music" }
+      - { src: "{{home}}/Templates" }
+      - { src: "{{home}}/Documents" }
+    when: remove_dirs == "True"

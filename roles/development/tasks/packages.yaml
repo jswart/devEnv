@@ -1,0 +1,27 @@
+---
+  #--------------------------------------------------------------------
+  # Install Software Packages
+  #--------------------------------------------------------------------
+  - name: Install vim
+    apt: update_cache=no name=vim install_recommends=yes
+
+  - name: Install meld
+    apt: update_cache=no name=meld install_recommends=yes
+
+  - name: Install gnupg2
+    apt: update_cache=no name=gnupg2 install_recommends=yes
+
+  - name: Install unzip
+    apt: update_cache=no name=unzip install_recommends=yes
+
+  - name: Install git
+    apt: update_cache=no name=git install_recommends=yes
+
+  # Source chromium doesn't work out of the box with Mint. See commit-
+  # dfcbbcb for downloading the latest x64 chrome. Something about cake
+  # and eating it... let's just go back to apt-get.
+  - name: Install chromium-browser
+    apt: update_cache=no name=chromium-browser install_recommends=yes
+
+  - name: Install maven
+    apt: update_cache=no name=maven install_recommends=yes

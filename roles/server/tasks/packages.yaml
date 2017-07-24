@@ -1,0 +1,9 @@
+---
+  #--------------------------------------------------------------------
+  # Install Server Software Packages
+  #--------------------------------------------------------------------
+  - name: Install openssh-server
+    apt: update_cache=no name=openssh-server install_recommends=yes
+
+  - name: Install mysql-server
+    apt: update_cache=no name=mysql-server install_recommends=yes

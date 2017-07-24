@@ -1,0 +1,24 @@
+---
+  #--------------------------------------------------------------------
+  # Sublime Download, Install, Configure
+  #--------------------------------------------------------------------
+  - stat: path={{packages_dir}}/sublime
+    register: stSublime
+
+  - block:
+
+    - name: Prevent Redownload
+      stat: path={{down}}/{{sublime}}
+      register: stDownSublime
+
+    - name: Download Sublime Text
+      get_url: dest={{down}} url=https://download.sublimetext.com/{{sublime}}
+      when: stDownSublime.stat.exists is defined and not stDownSublime.stat.exists
+
+    - name: Extract Sublime Text
+      unarchive: src={{down}}/{{sublime}} dest=/opt
+
+    - name: Setup Sublime Text Symlink
+      file: src=/opt/sublime_text_3/sublime_text dest={{packages_dir}}/sublime state=link
+
+    when: stSublime.stat.exists is defined and not stSublime.stat.exists

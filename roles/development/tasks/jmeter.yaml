@@ -1,0 +1,44 @@
+---
+  #--------------------------------------------------------------------
+  # JMeter Download, Install, Verify, Configure
+  #--------------------------------------------------------------------
+  - stat: path={{packages_dir}}/jmeter
+    register: stJmeter
+
+  - block:
+
+    - name: Prevent Redownload
+      stat: path={{down}}/{{jmeter}}
+      register: stDownjmeter
+
+    - name: Download jmeter
+      get_url: dest={{down}} url="http://mirror.its.dal.ca/apache//jmeter/binaries/{{jmeter}}"
+      when: stDownjmeter.stat.exists is defined and not stDownjmeter.stat.exists
+
+    - name: Download jmeter PGP
+      get_url: dest={{down}} url="http://www.apache.org/dist/jmeter/binaries/{{jmeter}}.asc"
+      when: stDownjmeter.stat.exists is defined and not stDownjmeter.stat.exists
+
+    - name: Authenticate jmeter - Get PGP Key
+      command: gpg --keyserver pgpkeys.mit.edu --recv-key 0612B399
+      register: recdKey
+
+    - name: Authenticate jmeter - Verify Key (trust network is not confirmed)
+      command: gpg --verify {{down}}/{{jmeter}}.asc {{down}}/{{jmeter}}
+      register: verkey
+
+    - name: Extract jmeter
+      unarchive: src={{down}}/{{jmeter}} dest=/opt
+      when: recdKey|succeeded and verkey|succeeded
+    
+    - name: Add alias jmeter
+      lineinfile: "dest={{home}}/.bashrc state=present insertafter=EOF line='# No GUI jmeter'"
+    
+    - lineinfile: dest={{home}}/.bashrc state=present insertafter=EOF create=True
+        line='jm () { jmeter -n "$@"; }'
+        regexp="^jm"
+
+    - name: Setup jmeter Symlink
+      file: src=/opt/apache-jmeter-{{jmeter_major}}/bin/jmeter dest={{packages_dir}}/jmeter state=link
+
+    when: stJmeter.stat.exists is defined and not stJmeter.stat.exists

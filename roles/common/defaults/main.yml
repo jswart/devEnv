@@ -1,0 +1,6 @@
+---
+remove_dirs: False
+user:        "{{ lookup('env', 'USER') }}"
+home:        "{{ lookup('env', 'HOME') }}"
+down:        "{{home}}/Downloads"
+alias:       "{{home}}/.bash_aliases"

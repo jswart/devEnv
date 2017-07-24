@@ -1,0 +1,7 @@
+---
+- include: packages.yaml
+- include: jdk.yaml
+- include: eclipse.yaml
+- include: git.yaml
+- include: jmeter.yaml
+- include: sublime.yaml
