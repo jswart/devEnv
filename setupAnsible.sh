@@ -22,10 +22,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-sudo apt-get install software-properties-common
-sudo apt-add-repository ppa:ansible/ansible
-sudo apt-get update
-sudo apt-get install ansible
+sudo apt-get -y install software-properties-common
+sudo apt-add-repository -y ppa:ansible/ansible
+sudo apt-get -y update
+sudo apt-get -y install ansible
 
 # ffs get rid of the stupid cows
 if [ $(cat ~/.bashrc | grep NOCOWS | wc -l) -eq 0  ]; then
