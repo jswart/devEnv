@@ -14,6 +14,12 @@
   - name: Install unzip
     apt: update_cache=no name=unzip install_recommends=yes
 
+  - name: Install dos2unix
+    apt: update_cache=no name=dos2unix install_recommends=yes
+
+  - name: Install openssh-server
+    apt: update_cache=no name=openssh-server install_recommends=yes
+
   - name: Install git
     apt: update_cache=no name=git install_recommends=yes
 
