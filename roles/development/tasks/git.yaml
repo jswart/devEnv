@@ -14,6 +14,6 @@
     - git config --global mergetool.meld.path "/usr/bin/meld"
     - git config --global mergetool.prompt false
     - git config --global core.autocrlf false
-    - git config --global core.editor {{packages_dir}}/sublime
+    - git config --global core.editor "{{packages_dir}}/sublime -w"
     changed_when: false
     become_user: "{{user}}"
