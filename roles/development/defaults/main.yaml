@@ -1,6 +1,7 @@
 ---
-chromium:     chrome-linux.zip
-sublime:      sublime_text_3_build_3125_x64.tar.bz2
-eclipse:      eclipse-jee-neon-1a-linux-gtk-x86_64.tar.gz"
-jmeter_major: 3.1
-jmeter:       "apache-jmeter-{{jmeter_major}}.tgz"
+chromium:             chrome-linux.zip
+sublime:              sublime_text_3_build_3144_x64.tar.bz2
+eclipse_release_dir:  neon/3/
+eclipse_tar:          eclipse-jee-neon-3-linux-gtk-x86_64.tar.gz
+jmeter_major:         3.3
+jmeter:               "apache-jmeter-{{jmeter_major}}.tgz"

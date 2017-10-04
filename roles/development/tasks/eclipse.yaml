@@ -8,17 +8,17 @@
   - block:
 
     - name: Prevent Redownload
-      stat: path={{down}}/{{eclipse}}
+      stat: path={{down}}/{{eclipse_tar}}
       register: stDownEclipse
 
     - name: Download Eclipse - Java EE
       get_url: 
         dest: "{{down}}" 
-        url: "https://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/neon/1a/{{eclipse}}&mirror_id=1"
+        url: "https://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/{{eclipse_release_dir}}/{{eclipse_tar}}&mirror_id=1"
       when: stDownEclipse.stat.exists is defined and not stDownEclipse.stat.exists
 
     - name: Extract Eclipse
-      unarchive: src="{{down}}/{{eclipse}}" dest=/opt
+      unarchive: src="{{down}}/{{eclipse_tar}}" dest=/opt
 
     - name: Setup Eclipse Symlink
       file: src=/opt/eclipse/eclipse dest={{packages_dir}}/eclipse state=link
