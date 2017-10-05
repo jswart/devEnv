@@ -26,6 +26,7 @@
 - hosts: localhost
   vars:
     packages_dir: /opt/bin
+    ansible_python_interpreter: /usr/bin/python3
   become: yes
   become_user: root
 

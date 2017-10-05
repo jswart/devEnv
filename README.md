@@ -54,8 +54,8 @@ ansible-playbook devEnv.yaml --ask-become-pass
 
 ## TODO List:
 - [ ] Add sublime packages
-- [ ] Add sublime alias
 - [ ] Add sublime license
+- [ ] Add git configuration for email and user name in vault
 - [ ] Figure out git force to unix line endings always
 - [ ] Add custom bashrc command line colors and such
 - [ ] Add docker
