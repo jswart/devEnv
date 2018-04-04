@@ -2,6 +2,9 @@
   #--------------------------------------------------------------------
   # Sublime Download, Install, Configure
   #--------------------------------------------------------------------
+  - name: Downloads Folder Present
+    file: path="{{down}}" owner="{{user}}" group="{{user}}" mode=755 state=directory
+
   - stat: path={{packages_dir}}/sublime
     register: stSublime
 

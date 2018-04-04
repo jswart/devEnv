@@ -2,6 +2,9 @@
   #--------------------------------------------------------------------
   # Eclipse Download, Install, Configure
   #--------------------------------------------------------------------
+  - name: Downloads Folder is Present 
+    file: path="{{down}}" owner="{{user}}" group="{{user}}" mode=755 state=directory
+
   - stat: path={{packages_dir}}/eclipse
     register: stEclipse
 

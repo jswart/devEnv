@@ -53,6 +53,8 @@ ansible-playbook devEnv.yaml --ask-become-pass
 
 
 ## TODO List:
+- [ ] Add a way to skip installation of installed components
+- [ ] Make jmeter versioning determined automatically
 - [ ] Add sublime packages
 - [ ] Add sublime license
 - [ ] Add git configuration for email and user name in vault

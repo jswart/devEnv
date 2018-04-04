@@ -2,6 +2,9 @@
   #--------------------------------------------------------------------
   # JMeter Download, Install, Verify, Configure
   #--------------------------------------------------------------------
+  - name: Downloads Folder Present
+    file: path="{{down}}" owner="{{user}}" group="{{user}}" mode=755 state=directory
+
   - stat: path={{packages_dir}}/jmeter
     register: stJmeter
 
@@ -12,7 +15,7 @@
       register: stDownjmeter
 
     - name: Download jmeter
-      get_url: dest={{down}} url="http://mirror.its.dal.ca/apache//jmeter/binaries/{{jmeter}}"
+      get_url: dest={{down}} url="http://mirror.its.dal.ca/apache/jmeter/binaries/{{jmeter}}"
       when: stDownjmeter.stat.exists is defined and not stDownjmeter.stat.exists
 
     - name: Download jmeter PGP
@@ -29,7 +32,7 @@
 
     - name: Extract jmeter
       unarchive: src={{down}}/{{jmeter}} dest=/opt
-      when: recdKey|succeeded and verkey|succeeded
+      when: recdKey|succeeded and verkey is succeeded
     
     - name: Add alias jmeter
       lineinfile: "dest={{home}}/.bashrc state=present insertafter=EOF line='# No GUI jmeter'"
