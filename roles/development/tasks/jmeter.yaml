@@ -15,11 +15,11 @@
       register: stDownjmeter
 
     - name: Download jmeter
-      get_url: dest={{down}} url="http://mirror.its.dal.ca/apache/jmeter/binaries/{{jmeter}}"
+      get_url: timeout=60 dest={{down}} url="http://www.apache.org/dist/jmeter/binaries/{{jmeter}}"
       when: stDownjmeter.stat.exists is defined and not stDownjmeter.stat.exists
 
     - name: Download jmeter PGP
-      get_url: dest={{down}} url="http://www.apache.org/dist/jmeter/binaries/{{jmeter}}.asc"
+      get_url: timeout=60 dest={{down}} url="http://www.apache.org/dist/jmeter/binaries/{{jmeter}}.asc"
       when: stDownjmeter.stat.exists is defined and not stDownjmeter.stat.exists
 
     - name: Authenticate jmeter - Get PGP Key
@@ -42,6 +42,6 @@
         regexp="^jm"
 
     - name: Setup jmeter Symlink
-      file: src=/opt/apache-jmeter-{{jmeter_major}}/bin/jmeter dest={{packages_dir}}/jmeter state=link
+      file: src=/opt/apache-jmeter-{{jmeter_version}}/bin/jmeter dest={{packages_dir}}/jmeter state=link
 
     when: stJmeter.stat.exists is defined and not stJmeter.stat.exists

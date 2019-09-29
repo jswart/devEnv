@@ -1,0 +1,16 @@
+---
+  - name: Download git auto-complete
+    get_url:
+      dest: "{{home}}/.git-completion.bash"
+      url: https://raw.githubusercontent.com/git/git/v2.17.1/contrib/completion/git-completion.bash
+      owner: "{{user}}"
+      group: "{{user}}"
+      mode: '0755'
+
+  - name: Set file perms
+    file: path="{{down}}/.git-completion.bash" owner="{{user}}" group="{{user}}" mode=755 state=directory
+
+  - name: Source git auto-complete in .bashrc
+    lineinfile: dest={{home}}/.bashrc state=present insertafter=EOF create=True line='# git auto-complete config'
+
+  - lineinfile: "dest={{home}}/.bashrc state=present insertafter=EOF line='. ~/.git-completion.bash'"

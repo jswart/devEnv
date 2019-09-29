@@ -10,15 +10,20 @@ I like to install ansible on these systems, then have playbooks perform the majo
 
 ## Security
 - I try to verify gpg-keys when I can
-- I avoid ppas, unless managed directly by the source's creators, or confirmed to be a reputable source.
+- I try to select ppas managed directly by the source's creators, or confirmed to be a reputable source.
 
 ## Usage
-### Step 1: Install git
+### Step 1: Install git and clone this repo
+```bash
 sudo apt-get install git
+https://github.com/jswart/devEnv.git
+```
 
 ### Step 2: Install ansible
+```bash
 ./setupAnsible.sh
 source ~/.bashrc
+```
 
 ### Step 3: Run the ansible playbook
 ansible-playbook devEnv.yaml --ask-become-pass
@@ -30,14 +35,16 @@ ansible-playbook devEnv.yaml --ask-become-pass
   - YAML Editor
 - chromium-browser
 - meld
-- unzip
-- sublime
-  -  
+- unzip 
 - jmeter
 - python-pip
   - passlib
   - cryptography
+- git prompt
+  - Note: this will change your prompt
+- git auto-complete
 - apt-get
+  - sublime
   - jdk8
   - python-simplejson
   - libssl-dev
@@ -53,13 +60,7 @@ ansible-playbook devEnv.yaml --ask-become-pass
 
 
 ## TODO List:
-- [ ] Add a way to skip installation of installed components
 - [ ] Make jmeter versioning determined automatically
 - [ ] Add sublime packages
-- [ ] Add sublime license
 - [ ] Add git configuration for email and user name in vault
 - [ ] Figure out git force to unix line endings always
-- [ ] Add custom bashrc command line colors and such
-- [ ] Add docker
-- [ ] Add gitprompt and git autocomplete
-- [ ] Use python environments to protect against python dep issues

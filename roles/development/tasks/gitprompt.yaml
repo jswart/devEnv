@@ -1,0 +1,22 @@
+---
+  # TODO: v2.17.1 needs to be grabbed dynamically. git autocomplete didn't work until I had the
+  #       version that matched my version of git.
+  - name: Download gitprompt
+    get_url: 
+      dest: "{{home}}/.git-prompt.sh"
+      url: https://raw.githubusercontent.com/git/git/v2.17.1/contrib/completion/git-prompt.sh
+      owner: "{{user}}"
+      group: "{{user}}"
+      mode: '0755'
+
+  - name: Set file perms
+    file: path="{{down}}/.git-prompt.sh"  
+
+  - name: Source gitprompt in .bashrc
+    lineinfile: dest={{home}}/.bashrc state=present insertafter=EOF create=True line='# gitprompt config'
+
+  - lineinfile: dest="{{home}}/.bashrc" state=present insertafter=EOF line='. ~/.git-prompt.sh'
+  - lineinfile: dest="{{home}}/.bashrc" state=present insertafter=EOF line='export PS1=\'\[\033[38;5;208m\]\u\[$(tput sgr0)\]\[\033[38;5;15m\]@\[$(tput sgr0)\]\[\033[38;5;223m\]\h\[$(tput sgr0)\]\[\033[38;5;15m\]:\[$(tput sgr0)\]\[\033[38;5;168m\]\w\[$(tput sgr0)\]\[\033[38;5;15m\]$(__git_ps1 " (%s)") \\$ \''
+  - lineinfile: dest="{{home}}/.bashrc" state=present insertafter=EOF line='export GIT_PS1_SHOWCOLORHINTS=1'
+  - lineinfile: dest="{{home}}/.bashrc" state=present insertafter=EOF line='export GIT_PS1_SHOWDIRTYSTATE=1'
+  

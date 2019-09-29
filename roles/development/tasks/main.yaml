@@ -3,5 +3,7 @@
 - include: jdk.yaml
 - include: eclipse.yaml
 - include: git.yaml
+- include: gitprompt.yaml
 - include: jmeter.yaml
 - include: sublime.yaml
+- include: gitautocomplete.yaml
